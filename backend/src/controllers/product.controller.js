@@ -92,7 +92,7 @@ export const createProduct = asyncHandler(async (req, res) => {
 export const updateProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) throw new ApiError(404, 'Product not found');
-  if (req.user.role === 'instructor' && product.instructor.toString() !== req.user._id.toString()) {
+  if (req.user.role !== 'admin' && product.instructor.toString() !== req.user._id.toString()) {
     throw new ApiError(403, 'Not authorized to update this product');
   }
   Object.assign(product, req.body);
@@ -103,7 +103,7 @@ export const updateProduct = asyncHandler(async (req, res) => {
 export const deleteProduct = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) throw new ApiError(404, 'Product not found');
-  if (req.user.role === 'instructor' && product.instructor.toString() !== req.user._id.toString()) {
+  if (req.user.role !== 'admin' && product.instructor.toString() !== req.user._id.toString()) {
     throw new ApiError(403, 'Not authorized to delete this product');
   }
   await product.deleteOne();

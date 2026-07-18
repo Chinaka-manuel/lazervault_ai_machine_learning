@@ -75,7 +75,9 @@ router.post('/upload', protect, uploadMW.single('file'), upload.uploadFile);
 // Admin
 router.get('/admin/stats', protect, authorize('admin'), admin.dashboardStats);
 router.get('/admin/users', protect, authorize('admin'), admin.listUsers);
-router.put('/admin/users/:id', protect, authorize('admin'), admin.updateUserRole);
+router.post('/admin/users', protect, authorize('admin'), v.createUserValidator, validate, admin.createUser);
+router.put('/admin/users/:id', protect, authorize('admin'), v.updateUserValidator, validate, admin.updateUser);
+router.delete('/admin/users/:id', protect, authorize('admin'), admin.deleteUser);
 router.get('/admin/products', protect, authorize('admin'), admin.adminProducts);
 router.get('/admin/orders', protect, authorize('admin'), admin.adminOrders);
 router.get('/admin/coupons', protect, authorize('admin'), admin.listCoupons);

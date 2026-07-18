@@ -68,6 +68,21 @@ export const queryValidators = [
   query('type').optional().isIn(['course', 'video', 'snapshot']),
 ];
 
+export const createUserValidator = [
+  body('name').trim().notEmpty().withMessage('Name is required'),
+  body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  body('role').optional().isIn(['student', 'instructor', 'admin']),
+];
+
+export const updateUserValidator = [
+  body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+  body('email').optional().isEmail().withMessage('Valid email required').normalizeEmail(),
+  body('role').optional().isIn(['student', 'instructor', 'admin']),
+  body('isActive').optional().isBoolean(),
+  body('isApprovedInstructor').optional().isBoolean(),
+];
+
 export default {
   registerValidator,
   loginValidator,
@@ -81,4 +96,6 @@ export default {
   reviewValidator,
   idParamValidator,
   queryValidators,
+  createUserValidator,
+  updateUserValidator,
 };

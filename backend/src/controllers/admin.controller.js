@@ -31,6 +31,47 @@ export const dashboardStats = asyncHandler(async (req, res) => {
   });
 });
 
+export const createUser = asyncHandler(async (req, res) => {
+  const { name, email, password, role = 'student', isActive = true, bio } = req.body;
+  if (!name || !email || !password) throw new ApiError(400, 'Name, email and password are required');
+  if (password.length < 8) throw new ApiError(400, 'Password must be at least 8 characters');
+
+  const existing = await User.findOne({ email: email.toLowerCase() });
+  if (existing) throw new ApiError(409, 'Email already registered');
+
+  const user = await User.create({ name, email, password, role, isActive, bio });
+  res.status(201).json({ success: true, user: user.toSafeJSON() });
+});
+
+export const updateUser = asyncHandler(async (req, res) => {
+  const { name, email, role, isActive, isApprovedInstructor, bio } = req.body;
+  const updates = {};
+  if (name !== undefined) updates.name = name;
+  if (email !== undefined) updates.email = email.toLowerCase();
+  if (role !== undefined) updates.role = role;
+  if (isActive !== undefined) updates.isActive = isActive;
+  if (isApprovedInstructor !== undefined) updates.isApprovedInstructor = isApprovedInstructor;
+  if (bio !== undefined) updates.bio = bio;
+
+  const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true, runValidators: true });
+  if (!user) throw new ApiError(404, 'User not found');
+  if (isApprovedInstructor && role === 'instructor') {
+    const tpl = emailTemplates.instructorApproval(user.name);
+    const { sendEmail } = await import('../services/email.service.js');
+    await sendEmail({ to: user.email, ...tpl });
+  }
+  res.json({ success: true, user: user.toSafeJSON() });
+});
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  if (req.params.id === req.user._id.toString()) {
+    throw new ApiError(400, 'You cannot delete your own account');
+  }
+  const user = await User.findByIdAndDelete(req.params.id);
+  if (!user) throw new ApiError(404, 'User not found');
+  res.json({ success: true, message: 'User deleted' });
+});
+
 export const listUsers = asyncHandler(async (req, res) => {
   const { page, limit, skip } = paginate(req.query.page, 50);
   const filter = {};
@@ -103,8 +144,11 @@ export const moderateReview = asyncHandler(async (req, res) => {
 
 export default {
   dashboardStats,
+  createUser,
   listUsers,
+  updateUser,
   updateUserRole,
+  deleteUser,
   adminProducts,
   adminOrders,
   listCoupons,
