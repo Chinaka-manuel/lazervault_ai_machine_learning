@@ -1,7 +1,14 @@
+import mongoose from 'mongoose';
 import ApiError from '../utils/ApiError.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import Product from '../models/Product.js';
 import Category from '../models/Category.js';
+import Cart from '../models/Cart.js';
+import Wishlist from '../models/Wishlist.js';
+import Order from '../models/Order.js';
+import Review from '../models/Review.js';
+import Download from '../models/Download.js';
+import User from '../models/User.js';
 import { paginate } from '../utils/helpers.js';
 
 const buildFilter = (query) => {
@@ -48,17 +55,14 @@ export const listProducts = asyncHandler(async (req, res) => {
 });
 
 export const getProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findOne({
-    $or: [{ _id: req.params.id }, { slug: req.params.id }],
-  })
+  const isObjectId = mongoose.Types.ObjectId.isValid(req.params.id);
+  const query = isObjectId
+    ? { $or: [{ _id: req.params.id }, { slug: req.params.id }] }
+    : { slug: req.params.id };
+
+  const product = await Product.findOne(query)
     .populate('category', 'name slug')
-    .populate('instructor', 'name avatar bio')
-    .populate({
-      path: 'reviews',
-      match: { isApproved: true },
-      select: 'rating comment user createdAt',
-      populate: { path: 'user', select: 'name avatar' },
-    });
+    .populate('instructor', 'name avatar bio');
 
   if (!product) throw new ApiError(404, 'Product not found');
   product.views += 1;
@@ -101,11 +105,24 @@ export const updateProduct = asyncHandler(async (req, res) => {
 });
 
 export const deleteProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const isId = mongoose.Types.ObjectId.isValid(req.params.id);
+  const product = isId
+    ? await Product.findById(req.params.id)
+    : await Product.findOne({ slug: req.params.id });
   if (!product) throw new ApiError(404, 'Product not found');
   if (req.user.role !== 'admin' && product.instructor.toString() !== req.user._id.toString()) {
     throw new ApiError(403, 'Not authorized to delete this product');
   }
+
+  await Promise.all([
+    Cart.updateMany({ 'items.product': product._id }, { $pull: { items: { product: product._id } } }),
+    Wishlist.updateMany({ products: product._id }, { $pull: { products: product._id } }),
+    Order.updateMany({ 'items.product': product._id }, { $pull: { items: { product: product._id } } }),
+    Review.deleteMany({ product: product._id }),
+    Download.deleteMany({ product: product._id }),
+    User.updateMany({ enrolledCourses: product._id }, { $pull: { enrolledCourses: product._id } }),
+  ]);
+
   await product.deleteOne();
   res.json({ success: true, message: 'Product deleted' });
 });

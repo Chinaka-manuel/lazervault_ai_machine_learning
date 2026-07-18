@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
-  FiPlayCircle, FiDownload, FiClock, FiGlobe, FiBarChart2, FiUser, FiHeart, FiShoppingCart,
+  FiPlayCircle, FiDownload, FiClock, FiGlobe, FiBarChart2, FiUser, FiHeart, FiShoppingCart, FiMonitor,
 } from 'react-icons/fi';
 import { productApi } from '@/services/product.api';
 import { commerceApi } from '@/services/commerce.api';
@@ -17,10 +17,12 @@ import { formatCurrency, formatDate, formatDuration } from '@/utils/format';
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<any>(null);
   const [related, setRelated] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [owned, setOwned] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const add = useCartStore((s) => s.add);
@@ -40,6 +42,14 @@ const ProductDetail = () => {
       .catch(() => toast.error('Product not found'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!id || !user) return;
+    commerceApi
+      .checkAccess(id)
+      .then(({ data }) => setOwned(Boolean(data.owned)))
+      .catch(() => setOwned(false));
+  }, [id, user]);
 
   const handleAdd = async () => {
     if (!user) return toast.error('Please login to purchase');
@@ -72,11 +82,21 @@ const ProductDetail = () => {
     <div className="mx-auto max-w-7xl px-4 py-10">
       <div className="grid gap-10 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600/20 to-accent-500/20 sm:h-96">
+          <div
+            className={`relative flex h-72 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600/20 to-accent-500/20 sm:h-96 ${owned ? 'cursor-pointer transition hover:opacity-90' : ''}`}
+            onClick={owned ? () => navigate(`/dashboard/library/${product._id}`) : undefined}
+            role={owned ? 'button' : undefined}
+            aria-label={owned ? 'Open your product' : undefined}
+          >
             {product.thumbnail ? (
               <img src={product.thumbnail} alt={product.title} className="h-full w-full object-cover" />
             ) : (
               <FiPlayCircle className="h-24 w-24 text-brand-500/60" />
+            )}
+            {owned && (
+              <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                <FiMonitor className="mr-1 inline" /> Open
+              </span>
             )}
           </div>
 
@@ -167,10 +187,18 @@ const ProductDetail = () => {
             <p className="mt-1 text-xs text-slate-500">Published {formatDate(product.publishedAt || product.createdAt)}</p>
 
             <div className="mt-5 space-y-3">
-              <Button onClick={handleAdd} className="w-full">
-                <FiShoppingCart /> Add to Cart
-              </Button>
-              <Link to="/cart" className="btn-ghost w-full">Go to Cart</Link>
+              {owned ? (
+                <Button onClick={() => navigate(`/dashboard/library/${product._id}`)} className="w-full">
+                  <FiMonitor /> {product.type === 'video' ? 'Watch now' : 'Open / Download'}
+                </Button>
+              ) : (
+                <>
+                  <Button onClick={handleAdd} className="w-full">
+                    <FiShoppingCart /> Add to Cart
+                  </Button>
+                  <Link to="/cart" className="btn-ghost w-full">Go to Cart</Link>
+                </>
+              )}
             </div>
 
             <ul className="mt-6 space-y-2 text-sm text-slate-500">

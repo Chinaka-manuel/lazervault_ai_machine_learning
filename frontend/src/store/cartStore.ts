@@ -50,6 +50,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
   add: async (productId, quantity = 1) => {
     const { data } = await commerceApi.addToCart(productId, quantity);
+    if (data.alreadyOwned) {
+      throw new Error('You already own this product');
+    }
     set({
       items: data.cart.items || [],
       subtotal: data.subtotal,

@@ -40,8 +40,8 @@ const Cart = () => {
       <h1 className="mb-8 text-3xl font-bold">Shopping Cart</h1>
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          {items.map((item) => (
-            <div key={item.product._id} className="card flex items-center gap-4">
+          {items.map((item, idx) => (
+            <div key={item.product?._id || idx} className="card flex items-center gap-4">
               <div className="grid h-20 w-28 shrink-0 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-600/20 to-accent-500/20">
                 {item.product.thumbnail ? (
                   <img src={item.product.thumbnail} alt={item.product.title} className="h-full w-full object-cover" />

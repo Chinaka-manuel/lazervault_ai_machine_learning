@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import ErrorBoundary from '@/components/ui/ErrorBoundary';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import ScrollToTop from '@/components/ScrollToTop';
 
 import MainLayout from '@/layouts/MainLayout';
 import DashboardLayout from '@/layouts/DashboardLayout';
@@ -24,14 +25,14 @@ import Contact from '@/pages/Contact';
 import Pricing from '@/pages/Pricing';
 import NotFound from '@/pages/NotFound';
 
-import Login from '@/pages/auth/Login';
-import Register from '@/pages/auth/Register';
+import Login from '@/pages/auth/Auth';
 import ForgotPassword from '@/pages/auth/ForgotPassword';
 import ResetPassword from '@/pages/auth/ResetPassword';
 import VerifyEmail from '@/pages/auth/VerifyEmail';
 
 import StudentHome from '@/pages/dashboard/StudentHome';
 import Purchases from '@/pages/dashboard/Purchases';
+import Player from '@/pages/dashboard/Player';
 import Downloads from '@/pages/dashboard/Downloads';
 import Wishlist from '@/pages/dashboard/Wishlist';
 import Profile from '@/pages/dashboard/Profile';
@@ -94,6 +95,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <BrowserRouter>
+          <ScrollToTop />
           <Toaster position="top-right" toastOptions={{ className: 'dark:!bg-slate-800 dark:!text-white' }} />
           <Routes>
             <Route element={<MainLayout />}>
@@ -109,7 +111,6 @@ const App = () => {
               <Route path="contact" element={<Contact />} />
 
               <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
               <Route path="forgot-password" element={<ForgotPassword />} />
               <Route path="reset-password" element={<ResetPassword />} />
               <Route path="verify-email" element={<VerifyEmail />} />
@@ -124,6 +125,7 @@ const App = () => {
               >
                 <Route index element={<StudentHome />} />
                 <Route path="purchases" element={<Purchases />} />
+                <Route path="library/:id" element={<Player />} />
                 <Route path="downloads" element={<Downloads />} />
                 <Route path="wishlist" element={<Wishlist />} />
                 <Route path="profile" element={<Profile />} />

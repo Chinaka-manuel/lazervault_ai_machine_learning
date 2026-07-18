@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
     passwordResetToken: { type: String, select: false },
     passwordResetExpiry: { type: Date, select: false },
     refreshTokens: [{ type: String, select: false }],
-    enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
+    enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }],
     isActive: { type: Boolean, default: true },
     isApprovedInstructor: { type: Boolean, default: false },
     lastLogin: { type: Date },

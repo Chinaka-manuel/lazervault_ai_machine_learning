@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { FiDownload, FiPlayCircle } from 'react-icons/fi';
+import { FiDownload, FiPlayCircle, FiTrash2, FiMonitor } from 'react-icons/fi';
 import { commerceApi } from '@/services/commerce.api';
 import { formatCurrency, formatDate } from '@/utils/format';
 import Spinner from '@/components/ui/Spinner';
@@ -10,21 +10,25 @@ import Badge from '@/components/ui/Badge';
 const Purchases = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [removing, setRemoving] = useState<string | null>(null);
+  const navigate = useNavigate();
 
-  useEffect(() => {
+  const load = () => {
     commerceApi.myOrders().then(({ data }) => setOrders(data.orders || [])).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  };
 
-  const download = async (productId: string) => {
+  useEffect(load, []);
+
+  const remove = async (orderId: string, productId: string) => {
     try {
-      const { data } = await commerceApi.requestDownload(productId);
-      if (data.downloadUrl) {
-        window.open(data.downloadUrl, '_blank');
-      } else {
-        toast.success('Download prepared');
-      }
+      setRemoving(productId);
+      await commerceApi.removePurchasedItem(orderId, productId);
+      toast.success('Removed from your purchases');
+      load();
     } catch (e: any) {
       toast.error(e.message);
+    } finally {
+      setRemoving(null);
     }
   };
 
@@ -50,8 +54,13 @@ const Purchases = () => {
               <Badge color="green">Paid • {formatCurrency(order.total)}</Badge>
             </div>
             <div className="space-y-3">
+              {order.items.length === 0 && (
+                <p className="border-t border-slate-100 pt-3 text-sm text-slate-400 dark:border-slate-800">
+                  All items removed.
+                </p>
+              )}
               {order.items.map((item: any, i: number) => (
-                <div key={i} className="flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+                <div key={item.product || i} className="flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
                   <div className="flex items-center gap-3">
                     <FiPlayCircle className="text-brand-500" />
                     <div>
@@ -63,8 +72,24 @@ const Purchases = () => {
                     {item.product && (
                       <Link to={`/product/${item.product}`} className="btn-ghost px-3 py-1.5 text-sm">View</Link>
                     )}
-                    <button onClick={() => download(item.product)} className="btn-primary px-3 py-1.5 text-sm">
-                      <FiDownload /> Download
+                    {item.type === 'video' && item.product && (
+                      <button onClick={() => navigate(`/dashboard/library/${item.product}`)} className="btn-primary px-3 py-1.5 text-sm">
+                        <FiMonitor /> Watch
+                      </button>
+                    )}
+                    <button
+                      onClick={() => navigate(`/dashboard/library/${item.product}`)}
+                      className={item.type === 'video' ? 'btn-ghost px-3 py-1.5 text-sm' : 'btn-primary px-3 py-1.5 text-sm'}
+                    >
+                      <FiDownload /> {item.type === 'video' ? 'Open' : 'Download'}
+                    </button>
+                    <button
+                      onClick={() => remove(order._id, item.product)}
+                      disabled={removing === item.product}
+                      aria-label="Remove from purchases"
+                      className="rounded-lg p-2 text-red-500 hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-900/20"
+                    >
+                      <FiTrash2 />
                     </button>
                   </div>
                 </div>

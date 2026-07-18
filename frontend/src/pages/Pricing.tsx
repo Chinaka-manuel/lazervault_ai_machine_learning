@@ -55,7 +55,7 @@ const Pricing = () => (
               </li>
             ))}
           </ul>
-          <Link to="/register" className={`mt-6 ${plan.highlight ? 'btn-primary' : 'btn-ghost'} w-full`}>{plan.cta}</Link>
+          <Link to={`/login?mode=register`} className={`mt-6 ${plan.highlight ? 'btn-primary' : 'btn-ghost'} w-full`}>{plan.cta}</Link>
         </motion.div>
       ))}
     </motion.div>

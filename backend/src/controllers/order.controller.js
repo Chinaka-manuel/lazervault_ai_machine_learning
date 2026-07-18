@@ -114,4 +114,22 @@ export const confirmPurchase = async (order) => {
   await sendEmail({ to: user.email, ...tpl });
 };
 
-export default { createOrder, myOrders, getOrder, confirmPurchase };
+export const removeOrderItem = asyncHandler(async (req, res) => {
+  const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
+  if (!order) throw new ApiError(404, 'Order not found');
+  if (order.status !== 'paid') throw new ApiError(400, 'Only purchased items can be removed');
+
+  const productId = req.params.productId;
+  const before = order.items.length;
+  order.items = order.items.filter((i) => i.product?.toString() !== productId);
+  if (order.items.length === before) throw new ApiError(404, 'Product not found in this order');
+
+  const subtotal = order.items.reduce((sum, i) => sum + i.price * (i.quantity || 1), 0);
+  order.subtotal = subtotal;
+  order.total = Math.max(0, subtotal - (order.discount || 0));
+  await order.save();
+
+  res.json({ success: true, order });
+});
+
+export default { createOrder, myOrders, getOrder, removeOrderItem, confirmPurchase };

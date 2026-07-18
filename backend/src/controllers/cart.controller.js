@@ -3,8 +3,16 @@ import asyncHandler from '../utils/asyncHandler.js';
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
 import Coupon from '../models/Coupon.js';
+import Order from '../models/Order.js';
 
 const TAX_RATE = 0.0;
+
+const ownedProductIds = async (userId) => {
+  const orders = await Order.find({ user: userId, status: 'paid' }).select('items.product');
+  const ids = new Set();
+  orders.forEach((o) => o.items.forEach((i) => ids.add(i.product.toString())));
+  return ids;
+};
 
 const computeTotals = async (cart) => {
   let subtotal = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -27,6 +35,14 @@ const computeTotals = async (cart) => {
 export const getCart = asyncHandler(async (req, res) => {
   let cart = await Cart.findOne({ user: req.user._id }).populate('items.product', 'title thumbnail price type');
   if (!cart) cart = await Cart.create({ user: req.user._id, items: [] });
+
+  const owned = await ownedProductIds(req.user._id);
+  const before = cart.items.length;
+  if (before > 0) {
+    cart.items = cart.items.filter((i) => !owned.has(i.product._id?.toString() || i.product.toString()));
+    if (cart.items.length !== before) await cart.save();
+  }
+
   const totals = await computeTotals(cart);
   res.json({ success: true, cart, ...totals });
 });
@@ -35,6 +51,11 @@ export const addToCart = asyncHandler(async (req, res) => {
   const { productId, quantity = 1 } = req.body;
   const product = await Product.findById(productId);
   if (!product || !product.isPublished) throw new ApiError(404, 'Product not available');
+
+  const owned = await ownedProductIds(req.user._id);
+  if (owned.has(productId)) {
+    return res.json({ success: true, alreadyOwned: true, message: 'You already own this product', cart: await Cart.findOne({ user: req.user._id }).populate('items.product', 'title thumbnail price type'), ...(await computeTotals(await Cart.findOne({ user: req.user._id }))) });
+  }
 
   let cart = await Cart.findOne({ user: req.user._id });
   if (!cart) cart = await Cart.create({ user: req.user._id, items: [] });

@@ -7,7 +7,11 @@ export const notFound = (req, res, next) => {
 
 export const errorHandler = (err, req, res, next) => {
   let error = err;
-  if (!(error instanceof ApiError)) {
+
+  if (err?.name === 'CastError') {
+    const message = 'Invalid identifier. Please check the link and try again.';
+    error = new ApiError(400, message, false, err.stack);
+  } else if (!(error instanceof ApiError)) {
     const statusCode = error.statusCode || (error.name === 'ValidationError' ? 422 : 500);
     error = new ApiError(statusCode, error.message || 'Internal Server Error', false, err.stack);
   }

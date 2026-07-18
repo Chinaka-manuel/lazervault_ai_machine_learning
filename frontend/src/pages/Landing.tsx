@@ -81,7 +81,7 @@ const Landing = () => {
               <Link to="/courses" className="btn-primary">
                 Browse Courses <FiArrowRight />
               </Link>
-              <Link to="/register" className="btn-ghost">Get Started Free</Link>
+              <Link to="/login?mode=register" className="btn-ghost">Get Started Free</Link>
             </div>
 
             <div className="mt-10 flex gap-8">
@@ -247,7 +247,7 @@ const Landing = () => {
               Join thousands of learners building the future with AI & Machine Learning.
             </p>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="mt-6 inline-block">
-              <Link to="/register" className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-brand-700">
+                <Link to="/login?mode=register" className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-brand-700">
                 Start Learning Now <FiArrowRight />
               </Link>
             </motion.div>

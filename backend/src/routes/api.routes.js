@@ -55,6 +55,7 @@ router.delete('/wishlist/:id', protect, wishlist.removeFromWishlist);
 router.post('/orders', protect, v.orderCreateValidator, validate, order.createOrder);
 router.get('/orders', protect, order.myOrders);
 router.get('/orders/:id', protect, order.getOrder);
+router.delete('/orders/:id/items/:productId', protect, order.removeOrderItem);
 
 // Payments
 router.get('/payments/verify', protect, payment.verifyOrder);
@@ -62,8 +63,10 @@ router.post('/payments/webhook', payment.paymentWebhook);
 router.post('/payments/:id/refund', protect, authorize('admin'), payment.refundOrder);
 
 // Downloads
+router.get('/downloads/access/:id', protect, download.checkAccess);
 router.get('/downloads', protect, download.myDownloads);
 router.get('/downloads/:id', protect, download.requestDownload);
+router.delete('/downloads/:id', protect, download.deleteDownload);
 
 // User profile
 router.get('/profile', protect, user.getProfile);

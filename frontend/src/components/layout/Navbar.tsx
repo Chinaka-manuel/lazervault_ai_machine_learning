@@ -122,8 +122,7 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="hidden items-center gap-2 sm:flex">
-              <Link to="/login" className="btn-ghost px-4 py-2 text-sm">Login</Link>
-              <Link to="/register" className="btn-primary px-4 py-2 text-sm">Sign Up</Link>
+              <Link to="/login" className="btn-ghost px-4 py-2 text-sm">Login / Sign Up</Link>
             </div>
           )}
 
@@ -154,8 +153,7 @@ const Navbar = () => {
               ))}
               {!user && (
                 <div className="flex gap-2 pt-2">
-                  <Link to="/login" className="btn-ghost flex-1 py-2 text-sm" onClick={() => setOpen(false)}>Login</Link>
-                  <Link to="/register" className="btn-primary flex-1 py-2 text-sm" onClick={() => setOpen(false)}>Sign Up</Link>
+                  <Link to="/login" className="btn-primary flex-1 py-2 text-sm" onClick={() => setOpen(false)}>Login / Sign Up</Link>
                 </div>
               )}
             </div>
